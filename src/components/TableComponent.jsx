@@ -10,6 +10,7 @@ import React, { useMemo, useState } from "react";
 
 function TableComponent() {
   const data = useMemo(() => sampleData.rows, []);
+  //initialized state for input values
   const [inputValues, setInputValues] = useState({});
 
   const columns = [
@@ -42,7 +43,6 @@ function TableComponent() {
         <button
           onClick={() => {
             const input = Number(inputValues[row.id]);
-            console.log("input for " + row.id + " is " + input);
             if (!input || isNaN(input)) return;
 
             // to update currentValue and parent value
@@ -166,6 +166,7 @@ function TableComponent() {
     },
   ];
 
+  //initializing the reactTable hook
   const table = useReactTable({
     data,
     columns,
@@ -213,10 +214,8 @@ function TableComponent() {
               <tr>
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>
-                    {/* style={{ paddingLeft: `${row.depth * 20}px` }} */}
-                    {cell.column.columnDef.header === "Label" && row.depth > 0
-                      ? "=>"
-                      : ""}
+                    
+                    {cell.column.columnDef.header === "Label" && row.depth > 0 ? "=>": ""}
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
