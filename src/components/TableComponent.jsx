@@ -87,12 +87,12 @@ function TableComponent() {
         <button
           onClick={() => {
             const input = Number(inputValues[row.id]);
-            if (input < 0 || isNaN(input)) return;
+            if (!input || isNaN(input)) return;
 
             // console.log("portion" + portion);
             // console.log("children length",children.length);
 
-            if ((row.depth = 0)) return;
+            // if ((row.depth = 0)) return;
             //to be updated at currentValue
             const portion = input;
             const newValues = { ...currentValues };
