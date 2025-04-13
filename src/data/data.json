@@ -1,0 +1,39 @@
+[{
+        "id": "electronics",
+        "label": "Electronics",
+        "value": 1400,
+        "level": 0
+        
+    },
+    {
+            "id": "phones",
+            "label": "Phones",
+            "value": 800,
+            "level":1
+    },
+    {
+            "id": "laptops",
+            "label": "Laptops",
+            "value": 700,
+            "level":1
+    },
+    {
+        "id": "furniture",
+        "label": "Furniture",
+        "value": 1000,
+        "level":0
+      },
+      {
+            "id": "tables",
+            "label": "Tables",
+            "value": 300,
+            "level":1
+          },
+          {
+            "id": "chairs",
+            "label": "Chairs",
+            "value": 700,
+            "level":1
+          }
+    
+        ]
