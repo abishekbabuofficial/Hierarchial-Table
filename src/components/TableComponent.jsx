@@ -177,8 +177,8 @@ function TableComponent() {
       expanded: true, // Expand all rows by default
     },
   });
-  console.log(table.getCoreRowModel().rows[0].depth);
-  console.log(table.getRowModel().rows);
+  // console.log(table.getCoreRowModel().rows[0].depth);
+  // console.log(table.getRowModel().rows);
 
   const [currentValues, setCurrentValues] = useState(() => {
     const initial = {};
@@ -188,7 +188,7 @@ function TableComponent() {
     });
     return initial;
   });
-  console.log("currentValues", currentValues);
+  
 
   return (
     <div className="tableDiv">

@@ -3,7 +3,7 @@
       {
         "id": "electronics",
         "label": "Electronics",
-        "value": 1400, 
+        "value": 1500, 
         "children": [
           {
             "id": "phones",
