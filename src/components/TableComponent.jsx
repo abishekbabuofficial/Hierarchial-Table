@@ -6,12 +6,28 @@ import {
 } from "@tanstack/react-table";
 import sampleData from "../data/sampleData.json";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { initialCurrentValues } from "../utils/helper";
+import AllocationButtons from "./AllocationButtons";
+import HeaderGroup from "./HeaderGroup";
 
 function TableComponent() {
   const data = useMemo(() => sampleData.rows, []);
+
   //initialized state for input values
-  const [inputValues, setInputValues] = useState({});
+  // const [currentValues, setCurrentValues] = useState(
+  //   initialCurrentValues(data)
+  // );
+  const inputRef = useRef({});
+
+  const handleClick = (row) => {
+    const values = Object.entries(inputRef.current).reduce((acc, [id, ref]) => {
+      acc[id] = ref?.value || "";
+      return acc;
+    }, {});
+    inputRef.current[row.id].value = "";
+    return values[row.id];
+  };
 
   const columns = [
     {
@@ -27,11 +43,10 @@ function TableComponent() {
       header: "Input",
       cell: ({ row }) => (
         <input
+          ref={(el) => {
+            if (el) inputRef.current[row.id] = el;
+          }}
           type="number"
-          value={inputValues[row.id] ?? ""}
-          onChange={(e) =>
-            setInputValues({ ...inputValues, [row.id]: e.target.value })
-          }
           style={{ width: "80px" }}
         />
       ),
@@ -40,90 +55,26 @@ function TableComponent() {
     {
       header: "Allocation %",
       cell: ({ row }) => (
-        <button
-          onClick={() => {
-            const input = Number(inputValues[row.id]);
-            if (!input || isNaN(input)) return;
-
-            // to update currentValue and parent value
-            const newValues = { ...currentValues };
-            const percentValue = (input * currentValues[row.id]) / 100;
-            newValues[row.id] = percentValue + currentValues[row.id];
-            //to check whether it is child and to update the parent value
-            if (row.depth > 0) {
-              newValues[row.parentId] += percentValue;
-            }
-
-            console.log("row is: ", row);
-
-            //to update the child when parent is updated directly
-            const children = row.subRows;
-            // const demo = children.forEach((child)=>{console.log(child)})
-            const total = children.reduce(
-              (sum, child) => sum + Number(currentValues[child.id] || 0),
-              0
-            );
-            // console.log("total is "+total);
-            const parentValue = newValues[row.id];
-            console.log(newValues[row.id]);
-            children.forEach((child) => {
-              const percent = (currentValues[child.id] * input) / 100 || 0;
-              newValues[child.id] = Number(
-                (currentValues[child.id] + percent).toFixed(2)
-              );
-            });
-            setCurrentValues(newValues);
-            setInputValues((prev) => ({ ...prev, [row.id]: "" }));
-          }}
-        >
-          %
-        </button>
+        <AllocationButtons
+          row={row}
+          type="percent"
+          currentValues={currentValues}
+          setCurrentValues={setCurrentValues}
+          handleClick={handleClick}
+        />
       ),
     },
 
     {
       header: "Allocation Val",
       cell: ({ row }) => (
-        <button
-          onClick={() => {
-            const input = Number(inputValues[row.id]);
-            if (!input || isNaN(input)) return;
-
-            // console.log("portion" + portion);
-            // console.log("children length",children.length);
-
-            // if ((row.depth = 0)) return;
-            //to be updated at currentValue
-            const portion = input;
-            const newValues = { ...currentValues };
-            const parentValue = currentValues[row.id];
-            newValues[row.id] = Number(portion.toFixed(2));
-            const valueDifference = newValues[row.id] - currentValues[row.id];
-
-            //when child changed should be updated to parent
-            if (row.depth > 0) {
-              newValues[row.parentId] += valueDifference;
-            }
-
-            //when subtotal changed => values distributed to children
-
-            const children = row.subRows;
-            // const demo = children.forEach((child)=>{console.log(child)})
-            children.forEach((child) => {
-              const childPortion =
-                (portion * ((currentValues[child.id] / parentValue) * 100)) /
-                100;
-              console.log(
-                "portion of " + child.original.label + " is " + childPortion
-              );
-              newValues[child.id] = Number(childPortion.toFixed(2));
-            });
-            setCurrentValues(newValues);
-            setInputValues((prev) => ({ ...prev, [row.id]: "" }));
-          }}
-        >
-          Val
-        </button>
+        <AllocationButtons
+          row={row}
+          type="value"
+          currentValues={currentValues}
+          setCurrentValues={setCurrentValues}
+          handleClick={handleClick}
+        />
       ),
     },
 
@@ -177,45 +128,36 @@ function TableComponent() {
       expanded: true, // Expand all rows by default
     },
   });
-  // console.log(table.getCoreRowModel().rows[0].depth);
-  // console.log(table.getRowModel().rows);
 
   const [currentValues, setCurrentValues] = useState(() => {
-    const initial = {};
-    table.getRowModel().rows.forEach(function fill(row) {
-      initial[row.id] = row.original.value;
-      row.children?.forEach(fill);
-    });
-    return initial;
-  });
-  
+        const initial = {};
+        table.getRowModel().rows.forEach(function fill(row) {
+          initial[row.id] = row.original.value;
+          row.children?.forEach(fill);
+        });
+        return initial;
+      });
+
+  console.log(currentValues)
+
+  const grandTotal = table
+    .getRowModel()
+    .rows.filter((row) => row.depth === 0)
+    .reduce((sum, row) => sum + (Number(currentValues[row.id]) || 0), 0);
 
   return (
     <div className="tableDiv">
       <table>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-
+        <HeaderGroup table={table} />
         <tbody>
           {table.getRowModel().rows.map((row) => (
             <React.Fragment key={row.id}>
               <tr>
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>
-                    
-                    {cell.column.columnDef.header === "Label" && row.depth > 0 ? "=>": ""}
+                    {cell.column.columnDef.header === "Label" && row.depth > 0
+                      ? "=>"
+                      : ""}
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -223,6 +165,12 @@ function TableComponent() {
             </React.Fragment>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            <td>Grand Total</td>
+            <td>{grandTotal}</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   );
